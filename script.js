@@ -19,16 +19,103 @@ const context = canvas.getContext('2d');
 let currentSize = 10;
 let bucketColor = '#FFFFFF';
 let currentColor = '#A51DAB';
+let isEraser = false;
+let isMouseDown = false;
+
+
+// Formatting Brush Size
+function displayBrushSize(){
+   if(currentSize < 10){
+    brushSize.textContent = `0${currentSize}`;
+   } else {
+    brushSize.textContent = currentSize;
+   }
+}
+// Setting Brush Size
+brushSlider.addEventListener('change', () => {
+  currentSize = brushSlider.value;
+  displayBrushSize();
+});
+// Setting Brush Color
+brushColorBtn.addEventListener('change', () => {
+    isEraser = false;
+    currentColor = `#${brushColorBtn.value}`;
+});
+
+// Setting Background Color
+bucketColorBtn.addEventListener('change',() => {
+  bucketColor = `#${bucketColorBtn.value}`;
+  createCanvas();
+});
+
+// Eraser
+eraser.addEventListener('click', () => {
+  isEraser = true;
+  brushIcon.style.color = 'white';
+  eraser.style.color = 'black';
+  activeToolEl.textContent = 'Eraser';
+  currentColor = bucketColor;
+  currentSize = 50;
+});
+
+// Switch back to Brush
+function switchToBrush(){
+  isEraser = false;
+  activeToolEl.textContent = 'Brush';
+  brushIcon.style.color = 'black';
+  eraser.style.color = 'white';
+  currentColor = `#${brushColorBtn.value}`;
+  currentSize = 10;
+  brushSlider.value = 10;
+  displayBrushSize();
+}
 
 // Create Canvas
-
 function createCanvas(){
   canvas.width = window.innerWidth;
   canvas.height = window.innerHeight - 50;
   context.fillStyle = bucketColor;
   context.fillRect(0, 0, canvas.width, canvas.height);
-
   body.appendChild(canvas);
+  switchToBrush();
 }
 
+// Get Mouse Position
+function getMousePosition(event){
+  const boundaries = canvas.getBoundingClientRect();
+  return{
+    x: event.clientX - boundaries.left,
+    y: event.clientY - boundaries.top,
+  };
+}
+
+// Mouse Down 
+canvas.addEventListener('mousedown', (event) =>{
+  isMouseDown = true;
+  const currentPosition = getMousePosition(event);
+  context.moveTo(currentPosition.x, currentPosition.y);
+  context.beginPath();
+  context.lineWidth = currentSize;
+  context.lineCap = 'round';
+  context.strokeStyle = currentColor;
+});
+
+// Mouse Move
+canvas.addEventListener('mousemove', (event) =>{
+  if(isMouseDown) {
+    const currentPosition = getMousePosition(event);
+    context.lineTo(currentPosition.x, currentPosition.y);
+    context.stroke();
+  }
+});
+
+// Mouse Up
+canvas.addEventListener('mouseup', () => {
+   isMouseDown = false;
+});
+
+// Event Listener
+brushIcon.addEventListener('click',switchToBrush);
+
+// On Load
 createCanvas();
